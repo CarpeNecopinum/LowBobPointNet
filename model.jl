@@ -1,13 +1,3 @@
-struct TNet
-    layers::Chain
-end
-Flux.@functor TNet
-
-function TNet(dim)
-
-end
-
-
 struct LowBobPointNet
     enc1::Chain # goes up to the second nx64 point
     enc2::Chain # Computes the global feature 1024
@@ -16,10 +6,8 @@ end
 
 
 struct PointMax end
-#(::PointMax)(x) = maxpool(x, (size(x,1), 1))
 (::PointMax)(x) = maxpool(x, PoolDims(size(x), (size(x,1), 1)))
 
-# maximum(x, dims=1)
 
 function LowBobPointNet(dim)
     enc1 = Chain(
@@ -50,8 +38,6 @@ Flux.@functor LowBobPointNet
 onegen = Flux.use_cuda[] ? CuArrays.ones : ones
 Flux.Zygote.@adjoint onegen(ps...) = onegen(ps...), _ -> nothing
 
-zerogen = Flux.use_cuda[] ? CuArrays.zeros : zeros
-
 
 function (n::LowBobPointNet)(scene_points, query_points)
     local_features = model.enc1(scene_points)
@@ -59,7 +45,6 @@ function (n::LowBobPointNet)(scene_points, query_points)
 
     global_repeated = global_feature .* onegen(Float32, size(query_points,1), 1, 1, 1)
 
-    #global_repeated = repeat(global_feature; outer = (size(query_points,1), 1, 1, 1))
     combined = cat(query_points, global_repeated; dims = 3)
 
     model.decoder(combined)
