@@ -38,7 +38,7 @@ model = LowBobPointNet(2) |> gpu
 opt = ADAM()
 
 scene = visualize_model(model, show_room)
-mkdir("training_gpu")
+mkpath("training_gpu")
 save("training_gpu/step_0.png", scene; resolution = (1024, 1024)
     )
 
